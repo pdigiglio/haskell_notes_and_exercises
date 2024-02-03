@@ -16,9 +16,11 @@ fun1 (x:xs)
 
 {- |
 @fun1' list@ does the following:
- - Removes odd numbers from the list;
- - Subtracts 2 from each element in the list;
- - Multiplies all the numbers.
+
+  - Removes odd numbers from the list;
+  - Subtracts 2 from each element in the list;
+  - Multiplies all the remnaining numbers.
+ 
 If the list is empty, returns 1.
 -}
 fun1' :: [Integer] -> Integer
@@ -42,6 +44,7 @@ hailstoneSeq = takeWhile (/=1) . iterate nextHailstone
 
 {- |
 @fun' n@ does the following:
+
  - Generates the Hailstone sequence for @n@;
  - Removes the odd numbers from the sequence;
  - Reduces the sequence to its sum.
@@ -55,9 +58,12 @@ data Tree a =
     | Node Integer (Tree a) a (Tree a)
     deriving (Show, Eq)
 
--- | Returns whether a tree is balanced. I.e. if the heights of its left and
--- right subtrees differ by at most 1 and if both its left and right subtrees
--- are balanced.
+{- |
+Returns whether a tree is balanced.
+
+The tree is balanced if the heights of its left and right subtrees differ by at
+most 1 and if both its left and right subtrees are balanced.
+-}
 isBalanced :: Tree a -> Bool
 isBalanced Leaf = True
 isBalanced (Node _ l _ r) =
@@ -70,9 +76,13 @@ height :: Tree a -> Integer
 height (Node h _ _ _) = h
 height _ = -1
 
--- | @makeTree l val r@ makes a @Node@ with value @val@, whose left child is
--- @left@ and whose right child is @right@. The height is @1+@ the height of
--- the highest subree.
+{- |
+Make a new node.
+
+
+@makeTree l val r@ creates a node containing @val@ and whose children are @l@
+and @r@. The height of the node is evaluated by the height of the children.
+-}
 makeNode :: Tree a -> a -> Tree a -> Tree a
 makeNode left val right = Node h left val right
     where h = 1 + max (height left) (height right)
@@ -91,12 +101,15 @@ foldTree = foldr insertNode Leaf
 {- Ex. 3: Mode folds! -}
 {- Ex. 3.1 -}
 
+-- | Get a list of @Bool@'s and reduce them with a XOR.
 xor :: [Bool] -> Bool
 xor = odd . foldl' (+) 0 . map fromEnum
---xor = odd . foldl' ( (flip (+)) . fromEnum) 0
 
--- W/o explicit fold:
+-- The above cam be implemented without an explicit fold:
 --xor = odd . sum . map fromEnum
+
+-- Or with a single fold:
+--xor = foldl' (/=) False
 
 {- Ex. 3.2 -}
 
@@ -113,11 +126,14 @@ xor = odd . foldl' (+) 0 . map fromEnum
 --                = ((:) . f) x xs
 --                = ((:) (f x)) xs
 --                = ((f x) : xs)
+
+-- | Implement a map using @foldr@.
 map' :: (a -> b) -> [a] -> [b]
 map' f = foldr ((:) . f) []
 
 {- Ex. 3.3 -}
 
+-- | Implement a left fold using @foldr@.
 myFoldl :: (a -> b ->a) -> a -> [b] -> a
 myFoldl f base = foldr (flip f) base . reverse
 
@@ -142,8 +158,9 @@ sieveSundaram n =
 Generate the list of sieves for the Sundaram algorithm up to @n@.
 
 Use list comprehension to 
- 1. Generate all the pairs @i,j@ such that @j=1..n, i=1..j@
- 2. Evaluate a sieve from @i,j@
+
+  1. Generate all the pairs @i,j@ such that @j=1..n, i=1..j@
+  2. Evaluate a sieve from @i,j@
 
 Then, take only the sieves that are no greater than @n@.
 -}

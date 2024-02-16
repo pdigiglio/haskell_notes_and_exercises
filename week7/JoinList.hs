@@ -24,7 +24,12 @@ tag jl = case jl of
   (Append m _ _) -> m
 
 -- | Append two @JoinLists@s.
+--
+-- __NOTE:__ @(JoinList m a, (+++), Empty)@ is not a monoid because operator
+-- @(+++)@ is not associative.
 (+++) :: Monoid m => JoinList m a -> JoinList m a -> JoinList m a
+(+++) Empty r = r
+(+++) l Empty = l
 (+++) l r = Append (tag l <> tag r) l r
 
 {- Exercise 2 -}
@@ -38,14 +43,14 @@ jlSize = getSize . size . tag
 indexJ :: (Sized b, Monoid b) => Int -> JoinList b a -> Maybe a
 indexJ i jl
   | 0 <= i && i < jlSize jl = case jl of
-      (Single _ v) -> Just v
-      (Append _ l r) ->
-        let ls = jlSize l
-         in if i < ls
-              then indexJ i l
-              else indexJ (i - ls) r
-      -- NOTE: This should never be hit as @jlSize Empty == 0@.
-      _ -> Nothing
+    (Single _ v) -> Just v
+    (Append _ l r) ->
+      let ls = jlSize l
+       in if i < ls
+            then indexJ i l
+            else indexJ (i - ls) r
+    -- NOTE: This should never be hit as @jlSize Empty == 0@.
+    _ -> Nothing
   | otherwise = Nothing
 
 -- | Convert a @JoinList m a@ to a @[a]@ with an in-order traversal.
@@ -62,29 +67,23 @@ dropJ n jl
   -- Drop more elements than there are in the list.
   | n >= jlSize jl = Empty
   | otherwise = case jl of
-      (Append m l r) ->
-        let ls = jlSize l
-         in if n < ls
-              then Append m (dropJ n l) r
-              else dropJ (n - ls) r
-      -- NOTE: This should never be hit.
-      _ -> Empty
+    (Append _ l r) ->
+      let leftSize = jlSize l
+       in dropJ n l +++ dropJ (n - leftSize) r
+    other -> other
 
 -- | Take @n@ elements from a @JoinList@.
 takeJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
 takeJ n jl
   -- Nothing to take.
   | n <= 0 = Empty
-  -- Take more elements than there are in the list.
+  -- Take more elements than there are in the list: return the list.
   | n >= jlSize jl = jl
   | otherwise = case jl of
-      (Append m l r) ->
-        let ls = jlSize l
-         in if n < ls
-              then takeJ n l
-              else Append m l (takeJ (n - ls) r)
-      -- NOTE: This should never be hit.
-      _ -> Empty
+    (Append _ l r) ->
+      let leftSize = jlSize l
+       in takeJ n l +++ takeJ (n - leftSize) r
+    other -> other
 
 {- Exercise 3 -}
 scoreLine :: String -> JoinList Score String

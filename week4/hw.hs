@@ -1,7 +1,7 @@
 {- vim: set colorcolumn=80: -}
 {-# OPTIONS_GHC -Wall #-}
 
-module Homework where
+module Week4.Homework where
 
 import Data.List
 import qualified Data.List.NonEmpty as NE (head, length, group)

@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# OPTIONS_GHC -Wall #-}
 
 module JoinList where
@@ -91,18 +90,60 @@ scoreLine str = Single (scoreString str) str
 
 {- Exercise 4 -}
 
+-- | Apply a function to both elements of a pair.
 (+>) :: (a -> b) -> (a, a) -> (b, b)
 f +> (x, y) = (f x, f y)
 
-fromStrings :: [String] -> (JoinList (Score, Size) String)
+-- | Split a list in half.
+splitInHalf :: [a] -> ([a], [a])
+splitInHalf list = splitAt (length list `div` 2) list
+
+-- | Construct a @Single@ from a string, evaluating its score.
+single :: String -> JoinList (Score, Size) String
+single str = Single (scoreString str, 1) str
+
+-- | Construct a @JoinList@ from a list of stings.
+fromStrings :: [String] -> JoinList (Score, Size) String
 fromStrings [] = Empty
-fromStrings [str] = Single (scoreString str, 1) str
-fromStrings strings =
-  let n = length strings
-   in uncurry (+++)
-        . (fromStrings +>)
-        . splitAt (n `div` 2)
-        $ strings
+fromStrings [x] = single x
+fromStrings xs = uncurry (+++) . (fromStrings +>) . splitInHalf $ xs
+
+-- | Replace a line at a given index by looking for the string and replacing it.
+replaceLineRec ::
+  -- | Index to replace
+  Int ->
+  -- | The new line
+  String ->
+  -- | The target buffer
+  JoinList (Score, Size) String ->
+  -- | The modified buffer
+  JoinList (Score, Size) String
+replaceLineRec lineIdx withLine buf
+  | 0 < lineIdx || lineIdx >= numLines buf = buf
+  | otherwise = case buf of
+    (Single _ _) -> single withLine
+    (Append _ l r) ->
+      let lSize = numLines l
+       in if lineIdx < lSize
+            then replaceLine lineIdx withLine l +++ r
+            else l +++ replaceLine (lineIdx - lSize) withLine r
+    _ -> buf
+
+-- | Replace a line at a given index by looking taking advantage of @takeJ@ and
+-- @dropJ@.
+replaceLineLin ::
+  -- | Index to replace
+  Int ->
+  -- | The new line
+  String ->
+  -- | The target buffer
+  JoinList (Score, Size) String ->
+  -- | The modified buffer
+  JoinList (Score, Size) String
+replaceLineLin lineIdx withLine buf =
+  takeJ lineIdx buf
+    +++ single withLine
+    +++ dropJ (lineIdx + 1) buf
 
 instance Buffer (JoinList (Score, Size) String) where
   toString = unlines . jlToList
@@ -110,13 +151,4 @@ instance Buffer (JoinList (Score, Size) String) where
   line = indexJ
   numLines = jlSize
   value = getScore . fst . tag
-  replaceLine lineIdx withLine buf
-    | 0 < lineIdx || lineIdx >= numLines buf = buf
-    | otherwise = case buf of
-        (Single _ _) -> Single (scoreString withLine, 1) withLine
-        (Append _ l r) ->
-          let lSize = numLines l
-           in if lineIdx < lSize
-                then replaceLine lineIdx withLine l +++ r
-                else l +++ replaceLine (lineIdx - lSize) withLine r
-        _ -> buf
+  replaceLine = replaceLineLin

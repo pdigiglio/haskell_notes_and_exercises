@@ -1,4 +1,3 @@
-{- vim: set colorcolumn=80 tabstop=2: -}
 {-# OPTIONS_GHC -Wall #-}
 
 module Scrabble where

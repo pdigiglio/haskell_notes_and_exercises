@@ -83,10 +83,16 @@ test_sorted :: Test
 test_sorted =
   "sorted"
     ~: sortWithTree messages
-    ~?= sortOn timeStamp messages
+  ~?= sortOnTimestamp (filterOutUnknown messages)
   where
     messages = map parseMessage sample
     sortWithTree = inOrder . build
+    sortOnTimestamp = sortOn timeStamp
+    timeStamp (LogMessage _ ts _) = ts
+    timeStamp _ = undefined
+    isUnknown (Unknown _) = True
+    isUnknown _ = False
+    filterOutUnknown = filter (not . isUnknown)
 
 testList :: Test
 testList =

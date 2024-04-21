@@ -9,13 +9,6 @@ import Log
 -- (I|W) <timestamp> <content>
 -- E <severity> <timestamp> <content>
 
-
--- | Get the timestamp out of a log message.
-timeStamp :: LogMessage -> Int
-timeStamp msg = case msg of
-  (LogMessage _ ts _) -> ts
-  _ -> -1
-
 logMsg :: LogMessage -> String
 logMsg (Unknown message) = message
 logMsg (LogMessage _ _ message) = message
@@ -42,20 +35,23 @@ parse = map parseMessage . lines
 
 {- Exercise 2 -}
 
-
--- | Insert a @LogMessage@ into a (sorted) @MessageTree@.
+-- | Insert a @LogMessage@ into a sorted @MessageTree@, keeping the tree
+-- sorted.
 insert :: LogMessage -> MessageTree -> MessageTree
 insert (Unknown _) tree = tree
 insert msg Leaf = Node Leaf msg Leaf
 insert msg (Node l m r)
   | timeStamp msg < timeStamp m = Node (insert msg l) m r
   | otherwise = Node l m (insert msg r)
+  where
+    timeStamp (LogMessage _ ts _) = ts
+    timeStamp _ = undefined
 
 {- Exercise 3 -}
 
 -- | Build a sorted @MessageTree@ from a list of @LogMessages@.
 build :: [LogMessage] -> MessageTree
-build = foldl (\tree msg -> insert msg tree) Leaf
+build = foldr insert Leaf
 
 {- Exercise 4 -}
 

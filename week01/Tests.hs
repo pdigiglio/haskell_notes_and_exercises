@@ -41,8 +41,15 @@ test_validate =
 test_hanoi :: Test
 test_hanoi =
   TestList
-    [ hanoi 2 "a" "b" "c" ~?= [("a", "c"), ("a", "b"), ("c", "b")]
+    [ "hanoi3"
+        ~: hanoi 2 "a" "b" "c"
+        ~?= [("a", "c"), ("a", "b"), ("c", "b")],
+      "hanoi4Optim move count"
+        ~: length (hanoi4Optim 15 "a" "b" "c" "d")
+        ~?= 129
     ]
+
+-- TODO: property: length $ hanoi n a b c = 2^n-1
 
 main :: IO ()
 main =
